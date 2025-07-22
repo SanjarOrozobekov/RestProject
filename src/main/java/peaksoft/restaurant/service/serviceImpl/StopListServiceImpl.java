@@ -16,6 +16,7 @@ import peaksoft.restaurant.repo.StoplistRepo;
 import peaksoft.restaurant.repo.UserRepo;
 import peaksoft.restaurant.service.StopListService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -69,13 +70,23 @@ public class StopListServiceImpl implements StopListService {
 
         return StoplistResponce.builder()
                 .id(stopList.getId())
+                .reason(stopList.getReason())
                 .date(stopList.getDate())
+                .menuItemId(stopList.getMenuItem().getId())
                 .build();
     }
 
     @Override
     public List<StoplistResponce> findAll() {
-        return List.of();
+        List<StopList> stopLists = stoplistRepo.findAll();
+        List<StoplistResponce> stoplistResponceList = new ArrayList<>();
+        stopLists.forEach(stopList -> {
+            StoplistResponce stoplistResponce = new StoplistResponce();
+            stoplistResponce.setReason(stopList.getReason());
+            stoplistResponce.setDate(stopList.getDate());
+            stoplistResponceList.add(stoplistResponce);
+        });
+        return stoplistResponceList;
     }
 
     @Override

@@ -29,68 +29,122 @@ public class ChequeServiceImpl implements ChequeService {
     private final UserRepo userRepo;
     private final MenuItemRepo menuItemsRepo;
 
-    @Override
-    public SimpleResponce save(Long requestOwnerId, ChegueRequest chequeRequest) {
-        User requestOwner = userRepo.findById(requestOwnerId).orElseThrow(
-                () -> new NullPointerException(String.format("User with id %s not found", requestOwnerId))
-        );
+    //@Override
+    //public SimpleResponce save(Long requestOwnerId, ChegueRequest chequeRequest) {
+//        User requestOwner = userRepo.findById(requestOwnerId).orElseThrow(
+//                () -> new NullPointerException(String.format("User with id %s not found", requestOwnerId))
+//        );
+//
+//        if (requestOwner.getRole() == Role.CHEF) {
+//            return SimpleResponce.builder()
+//                    .status(HttpStatus.BAD_REQUEST)
+//                    .message("FORBIDDEN")
+//                    .build();
+//        }
+//
+//        User user = userRepo.findById(chequeRequest.userId()).orElseThrow(
+//                () -> new NullPointerException(String.format("User with id %s not found", chequeRequest.userId()))
+//        );
+//
+//        int totalPrice = 0, restaurantService = 0, loopCount = 0;
+//
+//        Cheque cheque = new Cheque();
+//
+//        for (Long menuItemId : chequeRequest.menuItemIds()) {
+//            MenuItem menuItem = menuItemsRepo.findById(menuItemId).orElseThrow(
+//                    () -> new NullPointerException(String.format("Menu item with id %s not found", menuItemId))
+//            );
+//            loopCount++;
+//
+//            totalPrice = totalPrice + menuItem.getPrice();
+//            restaurantService = menuItem.getRestaurant().getService();
+//            cheque.getMenuItems().add(menuItem);
+//        }
+//
+//        cheque.setUser(user);
+//        cheque.setService(restaurantService);
+//        cheque.setGrandTotal(totalPrice);
+//        cheque.setDate(LocalDateTime.now());
+//        cheque.setPriceAverage((double) totalPrice /loopCount);
+//
+//        if (!Objects.equals(user.getRestaurant().getId(), cheque.getMenuItems().getFirst().getRestaurant().getId())) {
+//            return SimpleResponce.builder()
+//                    .status(HttpStatus.BAD_REQUEST)
+//                    .message("FORBIDDEN")
+//                    .build();
+//        }
+//
+//        chequeRepo.save(cheque);
+//
+//        return SimpleResponce.builder()
+//                .status(HttpStatus.CREATED)
+//                .message("Cheque saved successfully")
+//                .build();
+        @Override
+        public SimpleResponce save(Long requestOwnerId, ChegueRequest chequeRequest) {
+            User requestOwner = userRepo.findById(requestOwnerId).orElseThrow(() ->
+                    new NullPointerException(String.format("User with id %s not found", requestOwnerId)));
 
-        if (requestOwner.getRole() == Role.CHEF) {
+            if (requestOwner.getRole() == Role.CHEF) {
+                return SimpleResponce.builder()
+                        .status(HttpStatus.BAD_REQUEST)
+                        .message("FORBIDDEN: Chefs are not allowed to create cheques.")
+                        .build();
+            }
+
+            User user = userRepo.findById(chequeRequest.userId()).orElseThrow(() ->
+                    new NullPointerException(String.format("User with id %s not found", chequeRequest.userId())));
+
+            Cheque cheque = new Cheque();
+            cheque.setUser(user);
+            cheque.setDate(LocalDateTime.now());
+
+            int totalPrice = 0;
+            int loopCount = 0;
+            Integer restaurantService = null;
+            Long restaurantId = null;
+
+            for (Long menuItemId : chequeRequest.menuItemIds()) {
+                MenuItem menuItem = menuItemsRepo.findById(menuItemId).orElseThrow(() ->
+                        new NullPointerException(String.format("Menu item with id %s not found", menuItemId)));
+
+                if (restaurantId == null) {
+                    restaurantId = menuItem.getRestaurant().getId();
+                    restaurantService = menuItem.getRestaurant().getService();
+                } else if (!restaurantId.equals(menuItem.getRestaurant().getId())) {
+                    return SimpleResponce.builder()
+                            .status(HttpStatus.BAD_REQUEST)
+                            .message("All menu items must belong to the same restaurant.")
+                            .build();
+                }
+
+                cheque.getMenuItems().add(menuItem);
+                totalPrice += menuItem.getPrice();
+                loopCount++;
+            }
+
+            if (!user.getRestaurant().getId().equals(restaurantId)) {
+                return SimpleResponce.builder()
+                        .status(HttpStatus.BAD_REQUEST)
+                        .message("FORBIDDEN: User and menu items must belong to the same restaurant.")
+                        .build();
+            }
+
+            cheque.setService(restaurantService);
+            cheque.setGrandTotal(totalPrice);
+            cheque.setPriceAverage(loopCount == 0 ? 0.0 : (double) totalPrice / loopCount);
+
+            chequeRepo.save(cheque);
+
             return SimpleResponce.builder()
-                    .status(HttpStatus.BAD_REQUEST)
-                    .message("FORBIDDEN")
+                    .status(HttpStatus.CREATED)
+                    .message("Cheque saved successfully")
                     .build();
-        }
 
-        User user = userRepo.findById(chequeRequest.userId()).orElseThrow(
-                () -> new NullPointerException(String.format("User with id %s not found", chequeRequest.userId()))
-        );
-
-        int totalPrice = 0, restaurantService = 0, loopCount = 0;
-
-        Cheque cheque = new Cheque();
-
-        for (Long menuItemId : chequeRequest.menuItemIds()) {
-            MenuItem menuItem = menuItemsRepo.findById(menuItemId).orElseThrow(
-                    () -> new NullPointerException(String.format("Menu item with id %s not found", menuItemId))
-            );
-            loopCount++;
-
-            totalPrice = totalPrice + menuItem.getPrice();
-            restaurantService = menuItem.getRestaurant().getService();
-            cheque.getMenuItems().add(menuItem);
-        }
-
-        cheque.setUser(user);
-        cheque.setService(restaurantService);
-        cheque.setGrandTotal(totalPrice);
-        cheque.setDate(LocalDateTime.now());
-        cheque.setPriceAverage((double) totalPrice /loopCount);
-
-        if (!Objects.equals(user.getRestaurant().getId(), cheque.getMenuItems().getFirst().getRestaurant().getId())) {
-            return SimpleResponce.builder()
-                    .status(HttpStatus.BAD_REQUEST)
-                    .message("FORBIDDEN")
-                    .build();
-        }
-
-        chequeRepo.save(cheque);
-
-        return SimpleResponce.builder()
-                .status(HttpStatus.CREATED)
-                .message("Cheque saved successfully")
-                .build();
     }
 
     @Override
     public ChegueResponce getById(Long id) {
-//        Long id;
-//        double priceAverage;
-//        LocalDateTime createdAt;
-//        int Service;
-//        int grandTotal;
-//        List<MenuItem> menuItems;
-
         Cheque cheque = chequeRepo.findById(id).orElseThrow(
                 () -> new NullPointerException(String.format("Cheque with id %s not found", id))
         );

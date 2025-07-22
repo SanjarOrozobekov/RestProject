@@ -33,7 +33,7 @@ public class SubcategoryServiceImpl implements SubcategoryService {
         Subcategory subcategory = new Subcategory();
         subcategory.setName(subcategoryRequest.name());
         subcategory.setCategory(category);
-        category.getSubcategories().add(subcategory);
+        //category.getSubcategories().add(subcategory);
         subcategoryRepo.save(subcategory);
         categoryRepo.save(category);
         return SimpleResponce.builder()
@@ -92,7 +92,8 @@ public class SubcategoryServiceImpl implements SubcategoryService {
         try {
             if (subCategory.getMenuItems() != null) {
                 for (MenuItem menuItem : subCategory.getMenuItems()) {
-                    menuItemRepo.deleteById(menuItem.getId());
+                    //menuItemRepo.deleteById(menuItem.getId());
+                    menuItem.setSubcategory(null);
                 }
                 subCategory.getMenuItems().clear();
             }

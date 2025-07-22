@@ -11,7 +11,8 @@ import java.util.List;
 
 @Service
 public interface ChequeService {
-    SimpleResponce save (Long userId, ChegueRequest chequeRequest);
+    //SimpleResponce save (Long userId, ChegueRequest chequeRequest);
+    SimpleResponce save(Long requestOwnerId, ChegueRequest chequeRequest);
     ChegueResponce getById(Long id);
     List<ChegueResponce> getAll();
     SimpleResponce update (Long id, Long requestOwnerId, ChegueRequestUpdate chequeRequestUpdate);

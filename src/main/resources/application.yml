@@ -13,4 +13,4 @@ server:
   port: 2007
 security:
   secret:
-    key: javajavajavajava
+      key: none

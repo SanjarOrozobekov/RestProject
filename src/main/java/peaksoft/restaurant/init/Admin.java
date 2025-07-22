@@ -10,6 +10,8 @@ import peaksoft.restaurant.service.UserService;
 
 import java.time.LocalDate;
 
+import static peaksoft.restaurant.enums.Role.ADMIN;
+
 @Component
 @RequiredArgsConstructor
 public class Admin {
@@ -22,7 +24,7 @@ public class Admin {
                 .firstName("Sanjar")
                 .lastName("Orozobekov")
                 .dateOfBirth(LocalDate.of(2006, 11, 15))
-                .email("sake@gmail.com")
+                .email("sanjar@gmail.com")
                 .password("12345")
                 .phoneNumber("+996500061511")
                 .role(Role.ADMIN)
